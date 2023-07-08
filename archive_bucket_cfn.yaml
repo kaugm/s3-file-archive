@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creates S3 Bucket to store archived backups
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: A good naming convention is to input your local machine's hostname, which will be appended with "-archive"
+
+Resources:          
+  ArchiveBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUpload
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 3
+          - Id: NoncurrentVersionExpiration
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NewerNoncurrentVersions: 5
+              NoncurrentDays: 90
+          # - Id: GlacierRule
+          #   Status: Enabled
+          #   Transitions:
+          #     - TransitionInDays: 1
+          #       StorageClass: DEEP_ARCHIVE
+      Tags:
+        - Key: "Project"
+          Value: !Join [ "-", [!Ref BucketName, "FILE-ARCHIVE"]]
+      VersioningConfiguration:
+        Status: Enabled
+
+Outputs:
+  ArchiveBucketName:
+    Description: S3 Bucket in which back up files will be archived
+    Value: !Ref ArchiveBucket
+
+
+# TODO: Set up cross-region replication
