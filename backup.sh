@@ -2,21 +2,25 @@
 # Syncs S3 with the local machine
 
 # Set variables
-HOST=$(hostname -s)
-LOCAL_ROOT="/Users/martk"
+HOST=$(hostname -s | tr '[:upper:]' '[:lower:]')
+LOCAL_ROOT="/Users/karlmartin/"
 BUCKET="s3://$HOST-archive"
 
 backup() {
-    printf "\nBacking up $DIR. Please wait..\n"
+    printf "\nBacking up $LOCAL_ROOT to $BUCKET. Please wait..\n"
 
-    aws s3 sync $DIR $BUCKET \
+    aws s3 sync $LOCAL_ROOT $BUCKET \
     --exclude "*" \
-    --include "Desktop/*"
+    --include ".zshrc" \
+    --include ".vimrc" \
+    --include "Documents/*"\
+    --include "dev/*" \
     --exclude "*.DS_Store" \
     --exclude "*.localized" \
+    --exclue "*git*" \
     --storage-class DEEP_ARCHIVE \
 
-    printf "\nBackup of $DIR complete.\n"
+    printf "\nBackup of $LOCAL_ROOT to $BUCKET complete.\n"
 }
 
 backup
