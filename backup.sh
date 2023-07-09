@@ -3,24 +3,31 @@
 
 # Set variables
 HOST=$(hostname -s | tr '[:upper:]' '[:lower:]')
-LOCAL_ROOT="/Users/karlmartin/"
+LOCAL_ROOT="/Users/karlmartin"
 BUCKET="s3://$HOST-archive"
 
+# Directory paths are relative to $LOCAL_ROOT
+declare -a PATHS=("Documents" "dev")
+
 backup() {
-    printf "\nBacking up $LOCAL_ROOT to $BUCKET. Please wait..\n"
 
-    aws s3 sync $LOCAL_ROOT $BUCKET \
-    --exclude "*" \
-    --include ".zshrc" \
-    --include ".vimrc" \
-    --include "Documents/*"\
-    --include "dev/*" \
-    --exclude "*.DS_Store" \
-    --exclude "*.localized" \
-    --exclue "*git*" \
-    --storage-class DEEP_ARCHIVE \
+    # Backup selected directories in $HOME
+    for DIR in "${PATHS[@]}"
+    do
+        printf "\nBacking up $DIR to $BUCKET/$DIR Please wait..\n"
 
-    printf "\nBackup of $LOCAL_ROOT to $BUCKET complete.\n"
+        aws s3 sync $LOCAL_ROOT/$DIR "$BUCKET/$DIR" \
+        --exclude "*.DS_Store" \
+        --exclude "*.localized" \
+        --exclude "*git*" \
+        --storage-class DEEP_ARCHIVE
+
+        printf "\nBackup of $DIR to $BUCKET/$DIR complete.\n"
+    done
+
+    # Backup select files in $HOME
+    aws s3 cp "$LOCAL_ROOT/.zshrc" $BUCKET
+    aws s3 cp "$LOCAL_ROOT/.vimrc" $BUCKET
 }
 
 backup
